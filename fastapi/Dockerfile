@@ -6,6 +6,7 @@ COPY requirements.txt /srv/requirements.txt
 COPY requirements-dev.txt /srv/requirements-dev.txt
 RUN pip install --no-cache-dir -r /srv/requirements.txt -r /srv/requirements-dev.txt
 
+COPY pyproject.toml /srv/pyproject.toml
 COPY app /srv/app
 COPY fastapi/main.py /srv/main.py
 COPY tests /srv/tests
