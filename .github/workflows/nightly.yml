@@ -1,0 +1,36 @@
+name: Nightly
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+
+jobs:
+  nightly:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and start services
+        run: docker compose up -d --build
+
+      - name: Run unit tests
+        run: docker compose run --rm fastapi pytest
+
+      - name: Run linters
+        run: |
+          docker compose run --rm fastapi ruff check .
+          docker compose run --rm fastapi black --check .
+
+      - name: Build docs
+        run: docker compose run --rm fastapi pdoc app -o docs
+
+      - name: Run dbt
+        run: docker compose run --rm dbt run
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v

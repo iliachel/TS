@@ -1,0 +1,9 @@
+name: astros_dbt
+version: 1.0.0
+profile: astros_ch
+
+model-paths: ["models"]
+
+models:
+  astros_dbt:
+    +materialized: table
