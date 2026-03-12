@@ -54,8 +54,8 @@ def _hash_id(raw_json: str) -> int:
 
     This is used for deduplication in ReplacingMergeTree.
     """
-    digest = hashlib.sha256(raw_json.encode('utf-8')).digest()
-    return int.from_bytes(digest[:8], 'big', signed=False)
+    digest = hashlib.sha256(raw_json.encode("utf-8")).digest()
+    return int.from_bytes(digest[:8], "big", signed=False)
 
 
 def fetch_astros(
@@ -74,9 +74,9 @@ def fetch_astros(
             if response.status_code == 200:
                 return response.json(), attempt
 
-            last_error = RuntimeError(f'HTTP {response.status_code}: {response.text[:200]}')
+            last_error = RuntimeError(f"HTTP {response.status_code}: {response.text[:200]}")
 
-            retry_after = _parse_retry_after(response.headers.get('Retry-After'))
+            retry_after = _parse_retry_after(response.headers.get("Retry-After"))
             delay = base_delay * (2 ** (attempt - 1))
             if retry_after is not None:
                 delay = max(delay, retry_after)
@@ -86,7 +86,7 @@ def fetch_astros(
 
         time.sleep(delay)
 
-    raise RuntimeError(f'Failed to fetch after {max_attempts} attempts') from last_error
+    raise RuntimeError(f"Failed to fetch after {max_attempts} attempts") from last_error
 
 
 def insert_raw(payload: dict[str, Any], attempts: int) -> IngestResult:
@@ -97,33 +97,33 @@ def insert_raw(payload: dict[str, Any], attempts: int) -> IngestResult:
     inserted_at = datetime.utcnow()
 
     client.insert(
-        'raw_astros',
+        "raw_astros",
         [(raw_id, raw_json, inserted_at)],
-        column_names=['id', 'raw_json', '_inserted_at'],
+        column_names=["id", "raw_json", "_inserted_at"],
     )
 
     return IngestResult(
         attempts=attempts,
         inserted_rows=1,
         raw_id=raw_id,
-        inserted_at=inserted_at.strftime('%Y-%m-%d %H:%M:%S'),
+        inserted_at=inserted_at.strftime("%Y-%m-%d %H:%M:%S"),
     )
 
 
 def optimize_tables() -> None:
     """Run OPTIMIZE FINAL for deduplication."""
     client = get_client()
-    client.command('OPTIMIZE TABLE raw_astros FINAL')
-    client.command('OPTIMIZE TABLE people FINAL')
+    client.command("OPTIMIZE TABLE raw_astros FINAL")
+    client.command("OPTIMIZE TABLE people FINAL")
 
 
 def fetch_and_insert() -> IngestResult:
     """Fetch JSON, insert into ClickHouse, optionally optimize."""
-    url = _get_env('ASTROS_URL', 'http://api.open-notify.org/astros.json')
+    url = _get_env("ASTROS_URL", "http://api.open-notify.org/astros.json")
     payload, attempts = fetch_astros(url)
     result = insert_raw(payload, attempts)
 
-    if _get_env('RUN_OPTIMIZE', 'false').lower() in {'1', 'true', 'yes'}:
+    if _get_env("RUN_OPTIMIZE", "false").lower() in {"1", "true", "yes"}:
         optimize_tables()
 
     return result

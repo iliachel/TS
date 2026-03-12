@@ -6,72 +6,72 @@ from fastapi.responses import HTMLResponse
 from app.ch_client import get_client
 from app.ingest import fetch_and_insert, fetch_astros
 
-app = FastAPI(title='Astros Ingest Service', version='1.1.0')
+app = FastAPI(title="Astros Ingest Service", version="1.1.0")
 
 
-@app.get('/health')
+@app.get("/health")
 def health():
-    return {'status': 'ok'}
+    return {"status": "ok"}
 
 
-@app.get('/raw')
+@app.get("/raw")
 def raw():
     try:
-        payload, attempts = fetch_astros('http://api.open-notify.org/astros.json')
-        return {'status': 'ok', 'attempts': attempts, 'payload': payload}
+        payload, attempts = fetch_astros("http://api.open-notify.org/astros.json")
+        return {"status": "ok", "attempts": attempts, "payload": payload}
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 
 
-@app.post('/ingest')
+@app.post("/ingest")
 def ingest():
     try:
         result = fetch_and_insert()
         return {
-            'status': 'ok',
-            'attempts': result.attempts,
-            'inserted_rows': result.inserted_rows,
-            'raw_id': result.raw_id,
-            'inserted_at': result.inserted_at,
+            "status": "ok",
+            "attempts": result.attempts,
+            "inserted_rows": result.inserted_rows,
+            "raw_id": result.raw_id,
+            "inserted_at": result.inserted_at,
         }
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 
 
-@app.get('/people')
+@app.get("/people")
 def people(limit: int = Query(100, ge=1, le=1000)):
     try:
         client = get_client()
         result = client.query(
-            'SELECT craft, name, _inserted_at FROM people ORDER BY _inserted_at DESC LIMIT %(limit)s',
-            parameters={'limit': limit},
+            "SELECT craft, name, _inserted_at FROM people ORDER BY _inserted_at DESC LIMIT %(limit)s",
+            parameters={"limit": limit},
         )
         rows = [
-            {'craft': row[0], 'name': row[1], '_inserted_at': str(row[2])}
+            {"craft": row[0], "name": row[1], "_inserted_at": str(row[2])}
             for row in result.result_rows
         ]
-        return {'rows': rows}
+        return {"rows": rows}
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 
 
-@app.get('/stats/people_by_craft')
+@app.get("/stats/people_by_craft")
 def people_by_craft():
     try:
         client = get_client()
         result = client.query(
-            'SELECT craft, people_count, last_seen_at FROM people_by_craft ORDER BY craft'
+            "SELECT craft, people_count, last_seen_at FROM people_by_craft ORDER BY craft"
         )
         rows = [
-            {'craft': row[0], 'people_count': int(row[1]), 'last_seen_at': str(row[2])}
+            {"craft": row[0], "people_count": int(row[1]), "last_seen_at": str(row[2])}
             for row in result.result_rows
         ]
-        return {'rows': rows}
+        return {"rows": rows}
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 
 
-@app.get('/ui', response_class=HTMLResponse)
+@app.get("/ui", response_class=HTMLResponse)
 def ui():
     return """
 <!doctype html>
