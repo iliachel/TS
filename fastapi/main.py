@@ -20,7 +20,7 @@ def raw():
         payload, attempts = fetch_astros("http://api.open-notify.org/astros.json")
         return {"status": "ok", "attempts": attempts, "payload": payload}
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
 @app.post("/ingest")
@@ -35,7 +35,7 @@ def ingest():
             "inserted_at": result.inserted_at,
         }
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
 @app.get("/people")
@@ -52,7 +52,7 @@ def people(limit: int = Query(100, ge=1, le=1000)):
         ]
         return {"rows": rows}
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
 @app.get("/stats/people_by_craft")
@@ -68,7 +68,7 @@ def people_by_craft():
         ]
         return {"rows": rows}
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
 @app.get("/ui", response_class=HTMLResponse)

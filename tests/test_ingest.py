@@ -62,4 +62,4 @@ def test_fetch_astros_fails_after_max_attempts(monkeypatch) -> None:
     except RuntimeError as exc:
         assert "Failed to fetch" in str(exc)
     else:
-        assert False, "Expected RuntimeError"
+        raise AssertionError("Expected RuntimeError")
